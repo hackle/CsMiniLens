@@ -35,13 +35,13 @@ namespace CSharpLens
                 if (obj != null && caster.Type.IsAssignableFrom(obj.GetType())) {
                     return obj;
                 } else {
-                    return null;
+                    return Util.DefaultOf(caster.Type);
                 }
             }
             else if (exp.NodeType == ExpressionType.MemberAccess) {
                 var memberAccessExp = exp as MemberExpression;
                 var parent = ViewRec(memberAccessExp.Expression, o);
-                if (parent == null) return null;
+                if (parent == null) return Util.DefaultOf(exp.Type);
 
                 return ((memberAccessExp.Member as PropertyInfo)?.GetValue(parent)
                             ?? (memberAccessExp.Member as FieldInfo)?.GetValue(parent));

@@ -18,6 +18,13 @@ namespace CharpLensTest
             },
         };
 
+        [Fact]
+        public void LawOfDemeter()
+        {
+            var person = new Person();
+            Assert.Throws<NullReferenceException>(() => person.Address.Street = "Queen");
+        }
+
         [Theory]
         [MemberData(nameof(ViewTestCases))]
         public void Get(string note, Person person, string expectedStreet)
@@ -25,6 +32,13 @@ namespace CharpLensTest
             var lens = Lens.For<Person, String>(p => p.Address.Street);
 
             Assert.Equal(lens.View(person), expectedStreet);
+        }
+
+        [Fact]
+        public void GetPrimitive() {
+            var lens = Lens.For<Person, int>(p => p.Address.Number);
+
+            Assert.Equal(lens.View(new Person()), 0);
         }
 
         public static IEnumerable<object[]> SetTestCases = new object[][] {
