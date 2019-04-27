@@ -8,7 +8,7 @@ person.Address.Street = "Queen";
 This innocuous piece of code fails with a `NullReferenceException`. To avoid it, we need to do something like this,
 
 ```csharp
-if (person != null && person.Address != null) {
+if (person?.Address != null) {
     person.Address.Street = "Queen";
 }
 ```
