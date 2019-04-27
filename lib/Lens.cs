@@ -4,10 +4,10 @@ using System.Reflection;
 
 namespace CSharpLens
 {
-    public class LensInner<A, B> {
+    public class Lens<A, B> {
         private Expression<Func<A, B>> exp;
 
-        public LensInner(Expression<Func<A, B>> exp)
+        public Lens(Expression<Func<A, B>> exp)
         {
             this.exp = exp;
         }
@@ -16,7 +16,15 @@ namespace CSharpLens
             return (B) ViewRec(exp.Body, a);
         }
 
-        static MethodInfo ShallowCopy = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+        public A Set(A a, B b)
+        {
+            return (A) SetRec(exp.Body, _ => b)(a);
+        }
+
+        public A Over(A a, Func<B, B> f) {
+            return (A) SetRec(exp.Body, b => f((B) b))(a);
+        }
+
         static object ViewRec(Expression exp, object o) {
             if (exp.NodeType == ExpressionType.Parameter) {
                 return o;
@@ -66,7 +74,7 @@ namespace CSharpLens
                 var fieldInfo = memberAccessExp.Member as FieldInfo;
                 Func<object, object> nextSetter = parent => {
                     if (parent != null) {
-                        parent = ShallowCopy.Invoke(parent, null);
+                        parent = ShallowCopy(parent);
 
                         var v = propInfo?.GetValue(parent) ?? fieldInfo?.GetValue(parent);
                         
@@ -83,15 +91,15 @@ namespace CSharpLens
             throw new InvalidOperationException($"Expression type not supported");
         }
 
-        public A Set(A a, B b)
-        {
-            return (A) SetRec(exp.Body, _ => b)(a);
+        static MethodInfo memberwiseClone = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+        static object ShallowCopy(object obj) {
+            return memberwiseClone.Invoke(obj, null);
         }
     }
     public class Lens
     {
-        public static LensInner<A, B> For<A, B>(Expression<Func<A, B>> exp) {
-            return new LensInner<A, B>(exp);
+        public static Lens<A, B> For<A, B>(Expression<Func<A, B>> exp) {
+            return new Lens<A, B>(exp);
         }
     }
 }
